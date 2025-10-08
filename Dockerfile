@@ -41,5 +41,14 @@ ENV STREAMLIT_SERVER_PORT=8501
 # Expose the Streamlit port
 EXPOSE 8501
 
-# Start app
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0", "--browser.serverAddress=0.0.0.0"]
+WORKDIR /app
+COPY . /app
+
+# Create writable directory for Streamlit configs
+RUN mkdir -p /app/.streamlit
+
+ENV STREAMLIT_CONFIG_DIR=/app/.streamlit
+
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+
+
