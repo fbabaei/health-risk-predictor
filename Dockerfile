@@ -1,4 +1,4 @@
-# Use official Python base image
+# Use official Python image
 FROM python:3.12-slim
 
 # Set working directory
@@ -7,11 +7,20 @@ WORKDIR /app
 # Copy app files
 COPY . /app
 
-# Create .streamlit config folder inside /app (writeable)
-RUN mkdir -p /app/.streamlit
+# Create .streamlit directory with permissions
+RUN mkdir -p /app/.streamlit && chmod -R 777 /app/.streamlit
 
-# Configure Streamlit
-RUN echo "[server]\nheadless = true\nenableCORS = false\nenableXsrfProtection = false\nport = 8501\n" > /app/.streamlit/config.toml
+# Create Streamlit config
+RUN echo "\
+[server]\n\
+headless = true\n\
+enableCORS = false\n\
+enableXsrfProtection = false\n\
+port = 8501\n\
+\n\
+[logger]\n\
+level = \"info\"\n\
+" > /app/.streamlit/config.toml
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
@@ -23,16 +32,14 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose port
-EXPOSE 8501
-
-# ✅ Fix: Set HOME to /app so Streamlit writes configs in /app/.streamlit
-ENV HOME=/app
+# ✅ Force Streamlit to use our directory
+ENV STREAMLIT_CONFIG_DIR=/app/.streamlit
+ENV STREAMLIT_HOME=/app/.streamlit
+ENV STREAMLIT_RUNTIME_DIR=/app/.streamlit
 ENV STREAMLIT_SERVER_PORT=8501
 
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:8501/_stcore/health || exit 1
+# Expose the Streamlit port
+EXPOSE 8501
 
 # Start app
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0", "--browser.serverAddress=0.0.0.0"]
