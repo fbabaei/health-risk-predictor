@@ -68,7 +68,7 @@ history = model.fit(X_train, y_train, validation_split=0.2, epochs=30, batch_siz
 # 5️⃣ Save model & preprocessor
 # -----------------------------
 # Save model in TensorFlow directory format
-model.save("model")
+model.save("model/model.keras")
 
 # Save the scaler for use in Streamlit app
 import pickle

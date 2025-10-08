@@ -4,7 +4,7 @@ import numpy as np
 import pickle
 
 # Load model and scaler
-model = tf.keras.models.load_model("model")
+model = tf.keras.models.load_model("model/model.keras")
 with open("model/scaler.pkl", "rb") as f:
     scaler = pickle.load(f)
 
