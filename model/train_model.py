@@ -49,7 +49,7 @@ model.fit(X_train, y_train, epochs=50, batch_size=16, verbose=0)
 
 # Save model
 os.makedirs("model", exist_ok=True)
-model.save("model/model.h5")
+model.save("model/")
 
 # Save scaler for use in app
 import joblib

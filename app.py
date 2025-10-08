@@ -1,29 +1,21 @@
-import streamlit as st
 import tensorflow as tf
-import joblib
+import streamlit as st
 import numpy as np
+import pandas as pd
 
-st.set_page_config(page_title="Patient Risk Score", page_icon="🩺", layout="centered")
+# Load model
+model = tf.keras.models.load_model("model")  # directory, not .h5 file
 
-st.title("🩺 Patient Risk Score Predictor")
+st.title("🏥 Health Risk Predictor")
 
-# Load TensorFlow model and scaler
-model = tf.keras.models.load_model("model/model.h5")
-scaler = joblib.load("model/scaler.pkl")
+# Input fields
+age = st.number_input("Age", min_value=0, max_value=120, value=45)
+bmi = st.number_input("BMI", min_value=10.0, max_value=60.0, value=25.0)
+bp = st.number_input("Blood Pressure", min_value=60, max_value=180, value=120)
+glucose = st.number_input("Glucose Level", min_value=50, max_value=300, value=100)
+visits = st.number_input("Number of Previous Visits", min_value=0, max_value=50, value=2)
 
-st.sidebar.header("Enter Patient Data")
-
-age = st.sidebar.slider("Age", 20, 80, 40)
-bmi = st.sidebar.slider("BMI", 18.0, 35.0, 25.0)
-bp = st.sidebar.slider("Blood Pressure", 90, 160, 120)
-cholesterol = st.sidebar.slider("Cholesterol", 150, 280, 200)
-glucose = st.sidebar.slider("Glucose", 70, 160, 100)
-
-if st.button("Predict Risk Score"):
-    X = np.array([[age, bmi, bp, cholesterol, glucose]])
-    X_scaled = scaler.transform(X)
-    risk_score = model.predict(X_scaled)[0][0]
-    st.success(f"Predicted Risk Score: **{risk_score:.2f}**")
-
-st.markdown("---")
-st.caption("Model trained with synthetic data for demonstration.")
+if st.button("Predict Risk"):
+    X = np.array([[age, bmi, bp, glucose, visits]])
+    pred = model.predict(X)
+    st.success(f"Predicted Readmission Risk: {pred[0][0]:.2f}")
