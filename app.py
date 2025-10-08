@@ -1,27 +1,38 @@
-import os
-os.environ["STREAMLIT_HOME"] = os.path.join(os.getcwd(), ".streamlit")
-
 import streamlit as st
-import tensorflow as tf
 import numpy as np
-import pickle
+import joblib
+import tensorflow as tf
 
-# Load model & scaler
-model = tf.keras.models.load_model("model/model.keras")
-with open("model/scaler.pkl", "rb") as f:
-    scaler = pickle.load(f)
+# Load the model and scaler
+@st.cache_resource
+def load_model():
+    model = tf.keras.models.load_model("model/model.keras")
+    scaler = joblib.load("model/scaler.pkl")
+    return model, scaler
+
+model, scaler = load_model()
 
 st.title("🏥 Health Risk Predictor")
+st.markdown("Predict the likelihood of developing health risks using AI.")
 
-# Inputs
-age = st.number_input("Age", min_value=0, max_value=120, value=45)
-bmi = st.number_input("BMI", min_value=10.0, max_value=60.0, value=25.0)
-bp = st.number_input("Blood Pressure", min_value=60, max_value=180, value=120)
-glucose = st.number_input("Glucose Level", min_value=50, max_value=300, value=100)
-visits = st.number_input("Number of Previous Visits", min_value=0, max_value=50, value=2)
+# Define input fields
+age = st.number_input("Age", min_value=0, max_value=120, value=30)
+bmi = st.number_input("BMI", min_value=10.0, max_value=50.0, value=24.5)
+bp = st.number_input("Blood Pressure", min_value=50, max_value=200, value=120)
+chol = st.number_input("Cholesterol", min_value=100, max_value=400, value=200)
+glucose = st.number_input("Glucose", min_value=50, max_value=300, value=100)
 
 if st.button("Predict Risk"):
-    X = np.array([[age, bmi, bp, glucose, visits]])
-    X_scaled = scaler.transform(X)
-    pred = model.predict(X_scaled)
-    st.success(f"Predicted Readmission Risk: {pred[0][0]:.2f}")
+    # Prepare features
+    features = np.array([[age, bmi, bp, chol, glucose]])
+    scaled = scaler.transform(features)
+    pred = model.predict(scaled)
+    risk = float(pred[0][0]) * 100
+
+    st.subheader(f"🩺 Estimated Health Risk: **{risk:.2f}%**")
+    if risk > 70:
+        st.error("High risk! Please consult a doctor.")
+    elif risk > 40:
+        st.warning("Moderate risk. Consider lifestyle improvements.")
+    else:
+        st.success("Low risk! Keep maintaining healthy habits.")
